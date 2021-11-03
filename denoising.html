@@ -1,0 +1,264 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>Microscopy image denoising &#8212; tutorial-denoising  documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/alabaster.css" />
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="Welcome to napari-sdeconv’s documentation!" href="index.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <section id="microscopy-image-denoising">
+<h1>Microscopy image denoising<a class="headerlink" href="#microscopy-image-denoising" title="Permalink to this headline">¶</a></h1>
+<p>This tutorial is an introduction to microscopy image denoising. It aims at guiding the more apropriate
+denoising method to the data type and the targeted application.</p>
+<p>They are 3 main techniques of image denoising algorithms:</p>
+<ol class="arabic simple">
+<li><p><strong>Local filtering</strong>: the local filtering is the most basic denoising technique. Each pixel is replaced with a combination of it neighbors. Typical values are the mean value, the median value, or a weighted average (ex: Gaussian filtering).</p></li>
+<li><p><strong>Variational denoising</strong>: these methods are regularization based and aims at reconstructing a denoised image that looks alike the noisy image (ie small mean squared error) with a regularity constraint. The regularity constraint penalize the high variation considered as noise.</p></li>
+<li><p><strong>Patch based denoising</strong>: these method search similar patches in the image and filter them jointly. These methods are the more powerfull ones but have the drawback to introduce patches artefacts</p></li>
+</ol>
+<section id="local-filtering">
+<h2>Local Filtering<a class="headerlink" href="#local-filtering" title="Permalink to this headline">¶</a></h2>
+<p>This toolbox implements the median filter in multi dimensions 2D, 3D, 3D+T.
+The median filter has as many parameters than the image dimension. Each parameter is the radius of filter for a given dimension.</p>
+<p>The drawback of local filtering is a blur effect proportional to the size of the filtering neighborhood. This method is then not recomended for a precise denoising but can be used as a preprocessing in a segmentation pipeline for example.</p>
+<p><em>Example in 2D</em>:</p>
+<p>For 2D filtering the two parameters are <em>rx</em>, the radius of the median filter in the X dimension and ry, the radius of the median filter in the Y dimension. The larger the filter, the stronger the denoising.</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><figure class="align-default" id="id1">
+<a class="reference internal image-reference" href="_images/MAX_CELL01.png"><img alt="original image" src="_images/MAX_CELL01.png" style="width: 192.0px; height: 192.0px;" /></a>
+<figcaption>
+<p><span class="caption-text">Original image</span><a class="headerlink" href="#id1" title="Permalink to this image">¶</a></p>
+</figcaption>
+</figure>
+</td>
+<td><figure class="align-default" id="id2">
+<a class="reference internal image-reference" href="_images/o_MAX_CELL01_median2d_3x3.png"><img alt="denoised image" src="_images/o_MAX_CELL01_median2d_3x3.png" style="width: 192.0px; height: 192.0px;" /></a>
+<figcaption>
+<p><span class="caption-text">Median filtering with <em>sx=sy=3</em></span><a class="headerlink" href="#id2" title="Permalink to this image">¶</a></p>
+</figcaption>
+</figure>
+</td>
+</tr>
+<tr class="row-even"><td><figure class="align-default" id="id3">
+<a class="reference internal image-reference" href="_images/o_MAX_CELL01_median2d_5x5.png"><img alt="denoised image" src="_images/o_MAX_CELL01_median2d_5x5.png" style="width: 192.0px; height: 192.0px;" /></a>
+<figcaption>
+<p><span class="caption-text">Median filtering with <em>sx=sy=5</em></span><a class="headerlink" href="#id3" title="Permalink to this image">¶</a></p>
+</figcaption>
+</figure>
+</td>
+<td><figure class="align-default" id="id4">
+<a class="reference internal image-reference" href="_images/o_MAX_CELL01_median2d_7x7.png"><img alt="denoised image" src="_images/o_MAX_CELL01_median2d_7x7.png" style="width: 192.0px; height: 192.0px;" /></a>
+<figcaption>
+<p><span class="caption-text">Median filtering with <em>sx=sy=7</em></span><a class="headerlink" href="#id4" title="Permalink to this image">¶</a></p>
+</figcaption>
+</figure>
+</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="variational-denoising">
+<h2>Variational denoising<a class="headerlink" href="#variational-denoising" title="Permalink to this headline">¶</a></h2>
+<p>Variational denoising is a familly of algorithm that reconstruct a new image that looks alike the noisy image
+with a smoothness constraint. It is this constraint that allows the image denoising.</p>
+<p>This toolbox implement the SPITFIR(e) denoising method [1] that regularize the image with the hessian (2nd order derivative) and the intensity of the image.
+This constraint impose a smooth and sparse reconstructed image.</p>
+<p>Whatever the dimension (2D, 3D, 3D+t) the SPITFIR(e) alogrithm takes two main parameters.</p>
+<ol class="arabic simple">
+<li><p><em>Regularization</em>: is a positive number. When this parameter increase, the influence of the regularization decrease. Thus if the regularization parameter is too low, the image is blurred, and if it is too high the image is not denoised.</p></li>
+<li><p><em>Weighting</em>: The weighting parameter controle the effect of the sparsity. We recommand 3 values. If the image is not sparse (ie: signal everywhere) set the sparsity to 0.9, if the image is sparse (ie. spot like structures) set the sparsity to 0.1, otherwise set the sparsity to 0.6</p></li>
+</ol>
+<p><em>Example in 2D</em>:</p>
+<p>All the results above are obtained with a waighting parameter aquals to 0.6.</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><figure class="align-default" id="id5">
+<a class="reference internal image-reference" href="_images/MAX_CELL01.png"><img alt="original image" src="_images/MAX_CELL01.png" style="width: 192.0px; height: 192.0px;" /></a>
+<figcaption>
+<p><span class="caption-text">Original image</span><a class="headerlink" href="#id5" title="Permalink to this image">¶</a></p>
+</figcaption>
+</figure>
+</td>
+<td><figure class="align-default" id="id6">
+<a class="reference internal image-reference" href="_images/o_MAX_CELL01_spitfire2d_reg2.png"><img alt="denoised image" src="_images/o_MAX_CELL01_spitfire2d_reg2.png" style="width: 192.0px; height: 192.0px;" /></a>
+<figcaption>
+<p><span class="caption-text">SPITFIR(e) result with regularization=2</span><a class="headerlink" href="#id6" title="Permalink to this image">¶</a></p>
+</figcaption>
+</figure>
+</td>
+</tr>
+<tr class="row-even"><td><figure class="align-default" id="id7">
+<a class="reference internal image-reference" href="_images/o_MAX_CELL01_spitfire2d_reg5.png"><img alt="denoised image" src="_images/o_MAX_CELL01_spitfire2d_reg5.png" style="width: 192.0px; height: 192.0px;" /></a>
+<figcaption>
+<p><span class="caption-text">SPITFIR(e) result with regularization=5</span><a class="headerlink" href="#id7" title="Permalink to this image">¶</a></p>
+</figcaption>
+</figure>
+</td>
+<td><figure class="align-default" id="id8">
+<a class="reference internal image-reference" href="_images/o_MAX_CELL01_spitfire2d_reg10.png"><img alt="denoised image" src="_images/o_MAX_CELL01_spitfire2d_reg10.png" style="width: 192.0px; height: 192.0px;" /></a>
+<figcaption>
+<p><span class="caption-text">SPITFIR(e) result with regularization=10</span><a class="headerlink" href="#id8" title="Permalink to this image">¶</a></p>
+</figcaption>
+</figure>
+</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="patch-based-denoising">
+<h2>Patch based denoising<a class="headerlink" href="#patch-based-denoising" title="Permalink to this headline">¶</a></h2>
+<p>The patch based denoising methods allows to get a higer denoising effect but can generate artefacts.</p>
+<p>This toolbox implements the NDSAFIR algorithm [2]. The main parameter is the size of the denoising patch in all the dimensions.</p>
+<p>TODO: add here a desciption of all the parameter.</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><figure class="align-default" id="id9">
+<a class="reference internal image-reference" href="_images/MAX_CELL01.png"><img alt="original image" src="_images/MAX_CELL01.png" style="width: 192.0px; height: 192.0px;" /></a>
+<figcaption>
+<p><span class="caption-text">Original image</span><a class="headerlink" href="#id9" title="Permalink to this image">¶</a></p>
+</figcaption>
+</figure>
+</td>
+<td><figure class="align-default" id="id10">
+<a class="reference internal image-reference" href="_images/o_MAX_CELL01_safir2d_3x3_n2.png"><img alt="denoised image" src="_images/o_MAX_CELL01_safir2d_3x3_n2.png" style="width: 192.0px; height: 192.0px;" /></a>
+<figcaption>
+<p><span class="caption-text">NDSAFIR result with path size 3x3</span><a class="headerlink" href="#id10" title="Permalink to this image">¶</a></p>
+</figcaption>
+</figure>
+</td>
+</tr>
+<tr class="row-even"><td><figure class="align-default" id="id11">
+<a class="reference internal image-reference" href="_images/o_MAX_CELL01_safir2d_5x5_n2.png"><img alt="denoised image" src="_images/o_MAX_CELL01_safir2d_5x5_n2.png" style="width: 192.0px; height: 192.0px;" /></a>
+<figcaption>
+<p><span class="caption-text">NDSAFIR result with path size 5x5</span><a class="headerlink" href="#id11" title="Permalink to this image">¶</a></p>
+</figcaption>
+</figure>
+</td>
+<td><figure class="align-default" id="id12">
+<a class="reference internal image-reference" href="_images/o_MAX_CELL01_safir2d_7x7_n2.png"><img alt="denoised image" src="_images/o_MAX_CELL01_safir2d_7x7_n2.png" style="width: 192.0px; height: 192.0px;" /></a>
+<figcaption>
+<p><span class="caption-text">NDSAFIR result with path size 7x7</span><a class="headerlink" href="#id12" title="Permalink to this image">¶</a></p>
+</figcaption>
+</figure>
+</td>
+</tr>
+</tbody>
+</table>
+<p>[1] H. N. Nguyen, et al. SPITFIR(e): a supermaneuverable algorithm for 2D-3D+Time
+fluorescence image restoration and background subtraction. BioRXiv, 2021</p>
+<p>[2] J. Boulanger, et al. Patch-based non-local functional for denoising fluorescence microscopy image sequences. IEEE Trans. on Medical Imaging, 29(2): 442-454, 2010</p>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">tutorial-denoising</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Microscopy image denoising</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#local-filtering">Local Filtering</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#variational-denoising">Variational denoising</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#patch-based-denoising">Patch based denoising</a></li>
+</ul>
+</li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="index.html" title="previous chapter">Welcome to napari-sdeconv’s documentation!</a></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2021, Sylvain Prigent.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 4.2.0</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="_sources/denoising.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>
