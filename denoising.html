@@ -34,21 +34,21 @@
             
   <section id="microscopy-image-denoising">
 <h1>Microscopy image denoising<a class="headerlink" href="#microscopy-image-denoising" title="Permalink to this headline">¶</a></h1>
-<p>This tutorial is an introduction to microscopy image denoising. It aims at guiding the more apropriate
-denoising method to the data type and the targeted application.</p>
+<p>This tutorial is an introduction to microscopy image denoising. It aims at guiding using the more appropriate
+denoising method to the data type and to the targeted application.</p>
 <p>They are 3 main techniques of image denoising algorithms:</p>
 <ol class="arabic simple">
-<li><p><strong>Local filtering</strong>: the local filtering is the most basic denoising technique. Each pixel is replaced with a combination of it neighbors. Typical values are the mean value, the median value, or a weighted average (ex: Gaussian filtering).</p></li>
-<li><p><strong>Variational denoising</strong>: these methods are regularization based and aims at reconstructing a denoised image that looks alike the noisy image (ie small mean squared error) with a regularity constraint. The regularity constraint penalize the high variation considered as noise.</p></li>
-<li><p><strong>Patch based denoising</strong>: these method search similar patches in the image and filter them jointly. These methods are the more powerfull ones but have the drawback to introduce patches artefacts</p></li>
+<li><p><strong>Local filtering</strong>: the local filtering is the most basic denoising technique. Each pixel is replaced with a combination of its neighbors. Typical values are the mean value, the median value, or a weighted average (ex: Gaussian filtering).</p></li>
+<li><p><strong>Variational denoising</strong>: these methods are regularization based and aims at reconstructing a denoised image that looks alike the noisy image (i.e. small mean squared error) with a regularity constraint. The regularity constraint penalize the high variations considered as noise.</p></li>
+<li><p><strong>Patch based denoising</strong>: these methods search similar patches in the image and filter them jointly. Patch based methods are the more powerful ones but have the drawback to introduce patches artefacts.</p></li>
 </ol>
 <section id="local-filtering">
 <h2>Local Filtering<a class="headerlink" href="#local-filtering" title="Permalink to this headline">¶</a></h2>
 <p>This toolbox implements the median filter in multi dimensions 2D, 3D, 3D+T.
-The median filter has as many parameters than the image dimension. Each parameter is the radius of filter for a given dimension.</p>
-<p>The drawback of local filtering is a blur effect proportional to the size of the filtering neighborhood. This method is then not recomended for a precise denoising but can be used as a preprocessing in a segmentation pipeline for example.</p>
+The median filter has as many parameters than the image dimension. Each parameter is the radius of the filter for a given dimension.</p>
+<p>The drawback of local filtering is a blur effect that is proportional to the size of the filtering neighborhood. This method is then not recommended for a precise denoising but can be used as a preprocessing in a segmentation pipeline for example.</p>
 <p><em>Example in 2D</em>:</p>
-<p>For 2D filtering the two parameters are <em>rx</em>, the radius of the median filter in the X dimension and ry, the radius of the median filter in the Y dimension. The larger the filter, the stronger the denoising.</p>
+<p>For 2D filtering the two parameters are <em>rx</em>, the radius of the median filter in the X dimension and ry, the radius of the median filter in the Y dimension. the larger the filter, the stronger the denoising</p>
 <table class="docutils align-default">
 <colgroup>
 <col style="width: 50%" />
@@ -90,17 +90,17 @@ The median filter has as many parameters than the image dimension. Each paramete
 </section>
 <section id="variational-denoising">
 <h2>Variational denoising<a class="headerlink" href="#variational-denoising" title="Permalink to this headline">¶</a></h2>
-<p>Variational denoising is a familly of algorithm that reconstruct a new image that looks alike the noisy image
-with a smoothness constraint. It is this constraint that allows the image denoising.</p>
-<p>This toolbox implement the SPITFIR(e) denoising method [1] that regularize the image with the hessian (2nd order derivative) and the intensity of the image.
-This constraint impose a smooth and sparse reconstructed image.</p>
-<p>Whatever the dimension (2D, 3D, 3D+t) the SPITFIR(e) alogrithm takes two main parameters.</p>
+<p>Variational denoising is a family of algorithms that reconstruct a new image similar to the noisy image (minimizing the mean squared error) under
+a smoothness constraint (minimizing high frequencies for example). It is this constraint that allows the image denoising.</p>
+<p>This toolbox implement the SPITFIR(e) denoising method [1] that regularize the image with the Hessian (2nd order derivative) combined with the intensity of the image (sparsity constraint).
+This constraint impose a smooth and sparse reconstructed image which is representative of fluorescence images that contains sparse signal in a large dark background.</p>
+<p>Whatever the dimension (2D, 3D, 3D+t) the SPITFIR(e) algorithm takes two main parameters.</p>
 <ol class="arabic simple">
-<li><p><em>Regularization</em>: is a positive number. When this parameter increase, the influence of the regularization decrease. Thus if the regularization parameter is too low, the image is blurred, and if it is too high the image is not denoised.</p></li>
-<li><p><em>Weighting</em>: The weighting parameter controle the effect of the sparsity. We recommand 3 values. If the image is not sparse (ie: signal everywhere) set the sparsity to 0.9, if the image is sparse (ie. spot like structures) set the sparsity to 0.1, otherwise set the sparsity to 0.6</p></li>
+<li><p><em>Regularization</em>: is a positive number. When this parameter increase, the influence of the regularization decrease. Thus if the regularization parameter is too low, the image is blurred, and if the regularization is too high the image is not denoised.</p></li>
+<li><p><em>Weighting</em>: The weighting parameter control the effect of the sparsity. We recommend 3 values. If the image is not sparse (i.e. signal everywhere) set the sparsity to 0.9, if the image is sparse (i.e. spot like structures) set the sparsity to 0.1, otherwise set the sparsity to 0.6.</p></li>
 </ol>
 <p><em>Example in 2D</em>:</p>
-<p>All the results above are obtained with a waighting parameter aquals to 0.6.</p>
+<p>All the results above are obtained with a weighting parameter equals to 0.6.</p>
 <table class="docutils align-default">
 <colgroup>
 <col style="width: 50%" />
@@ -142,9 +142,9 @@ This constraint impose a smooth and sparse reconstructed image.</p>
 </section>
 <section id="patch-based-denoising">
 <h2>Patch based denoising<a class="headerlink" href="#patch-based-denoising" title="Permalink to this headline">¶</a></h2>
-<p>The patch based denoising methods allows to get a higer denoising effect but can generate artefacts.</p>
+<p>The patch based denoising methods allows to get a higher denoising effect but can generate artefacts (due to patch aggregation).</p>
 <p>This toolbox implements the NDSAFIR algorithm [2]. The main parameter is the size of the denoising patch in all the dimensions.</p>
-<p>TODO: add here a desciption of all the parameter.</p>
+<p>TODO: add here a description of all the parameter.</p>
 <table class="docutils align-default">
 <colgroup>
 <col style="width: 50%" />
